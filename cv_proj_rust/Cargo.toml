@@ -1,0 +1,17 @@
+[package]
+name = "cv_proj_rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]  # Compile this crate to a dynamic C library.
+
+[dependencies]
+godot = { git = "https://github.com/godot-rust/gdext", branch = "master"}
+# ndarray = "0.15.6"
+# ndarray-linalg = "0.12"
+nalgebra = "0.32.3"
+# openblas-src = { version = "0.10.8", features = ["system"] }
+lstsq = "0.5.0"

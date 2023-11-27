@@ -1,0 +1,238 @@
+[gd_scene load_steps=13 format=3 uid="uid://cvygwe34sxnb5"]
+
+[ext_resource type="PackedScene" uid="uid://cd3vabikmslif" path="res://scenes/test_env_1.tscn" id="1_xspcp"]
+[ext_resource type="PackedScene" uid="uid://dnrwsy3q1eulp" path="res://scenes/point_world.tscn" id="2_5ramx"]
+[ext_resource type="Script" path="res://scripts/take_snapshot_button.gd" id="2_vdpue"]
+[ext_resource type="PackedScene" uid="uid://b1swp0d4dhma6" path="res://scenes/lidar_preview.tscn" id="3_0fp2x"]
+[ext_resource type="Script" path="res://scripts/controller.gd" id="3_vleog"]
+[ext_resource type="Script" path="res://scripts/compute_transform_button.gd" id="6_vs4tu"]
+[ext_resource type="Script" path="res://scripts/icp.gd" id="7_u4dqj"]
+[ext_resource type="Script" path="res://scenes/compare_button.gd" id="8_2j0dc"]
+[ext_resource type="Script" path="res://scenes/normals_button.gd" id="8_rocb8"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_p77bn"]
+viewport_path = NodePath("simulation")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_2126a"]
+viewport_path = NodePath("map")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_kkkfn"]
+viewport_path = NodePath("lidar_preview")
+
+[node name="Node2D" type="Node2D"]
+
+[node name="simulation" type="SubViewport" parent="."]
+own_world_3d = true
+handle_input_locally = false
+size = Vector2i(800, 512)
+render_target_update_mode = 4
+
+[node name="test_env_1" parent="simulation" instance=ExtResource("1_xspcp")]
+
+[node name="lidar" parent="simulation/test_env_1/TurtleBot/lidar_mesh" index="0"]
+raycast_count = 100
+
+[node name="@RayCast3D@20511" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="0"]
+target_position = Vector3(10, 0, 0)
+
+[node name="@RayCast3D@20512" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="1"]
+target_position = Vector3(9.87688, 0, 1.56434)
+
+[node name="@RayCast3D@20513" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="2"]
+target_position = Vector3(9.51056, 0, 3.09017)
+
+[node name="@RayCast3D@20514" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="3"]
+target_position = Vector3(8.91007, 0, 4.53991)
+
+[node name="@RayCast3D@20515" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="4"]
+target_position = Vector3(8.09017, 0, 5.87785)
+
+[node name="@RayCast3D@20516" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="5"]
+target_position = Vector3(7.07107, 0, 7.07107)
+
+[node name="@RayCast3D@20517" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="6"]
+target_position = Vector3(5.87785, 0, 8.09017)
+
+[node name="@RayCast3D@20518" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="7"]
+target_position = Vector3(4.53991, 0, 8.91007)
+
+[node name="@RayCast3D@20519" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="8"]
+target_position = Vector3(3.09017, 0, 9.51056)
+
+[node name="@RayCast3D@20520" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="9"]
+target_position = Vector3(1.56434, 0, 9.87688)
+
+[node name="@RayCast3D@20521" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="10"]
+target_position = Vector3(6.12303e-16, 0, 10)
+
+[node name="@RayCast3D@20522" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="11"]
+target_position = Vector3(-1.56434, 0, 9.87688)
+
+[node name="@RayCast3D@20523" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="12"]
+target_position = Vector3(-3.09017, 0, 9.51056)
+
+[node name="@RayCast3D@20524" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="13"]
+target_position = Vector3(-4.53991, 0, 8.91007)
+
+[node name="@RayCast3D@20525" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="14"]
+target_position = Vector3(-5.87785, 0, 8.09017)
+
+[node name="@RayCast3D@20526" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="15"]
+target_position = Vector3(-7.07107, 0, 7.07107)
+
+[node name="@RayCast3D@20527" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="16"]
+target_position = Vector3(-8.09017, 0, 5.87785)
+
+[node name="@RayCast3D@20528" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="17"]
+target_position = Vector3(-8.91007, 0, 4.53991)
+
+[node name="@RayCast3D@20529" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="18"]
+target_position = Vector3(-9.51056, 0, 3.09017)
+
+[node name="@RayCast3D@20530" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="19"]
+target_position = Vector3(-9.87688, 0, 1.56434)
+
+[node name="@RayCast3D@20531" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="20"]
+target_position = Vector3(-10, 0, 1.22461e-15)
+
+[node name="@RayCast3D@20532" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="21"]
+target_position = Vector3(-9.87688, 0, -1.56434)
+
+[node name="@RayCast3D@20533" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="22"]
+target_position = Vector3(-9.51056, 0, -3.09017)
+
+[node name="@RayCast3D@20534" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="23"]
+target_position = Vector3(-8.91007, 0, -4.53991)
+
+[node name="@RayCast3D@20535" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="24"]
+target_position = Vector3(-8.09017, 0, -5.87785)
+
+[node name="@RayCast3D@20536" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="25"]
+target_position = Vector3(-7.07107, 0, -7.07107)
+
+[node name="@RayCast3D@20537" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="26"]
+target_position = Vector3(-5.87785, 0, -8.09017)
+
+[node name="@RayCast3D@20538" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="27"]
+target_position = Vector3(-4.53991, 0, -8.91007)
+
+[node name="@RayCast3D@20539" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="28"]
+target_position = Vector3(-3.09017, 0, -9.51056)
+
+[node name="@RayCast3D@20540" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="29"]
+target_position = Vector3(-1.56434, 0, -9.87688)
+
+[node name="@RayCast3D@20541" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="30"]
+target_position = Vector3(-1.83691e-15, 0, -10)
+
+[node name="@RayCast3D@20542" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="31"]
+target_position = Vector3(1.56434, 0, -9.87688)
+
+[node name="@RayCast3D@20543" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="32"]
+target_position = Vector3(3.09017, 0, -9.51056)
+
+[node name="@RayCast3D@20544" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="33"]
+target_position = Vector3(4.53991, 0, -8.91007)
+
+[node name="@RayCast3D@20545" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="34"]
+target_position = Vector3(5.87785, 0, -8.09017)
+
+[node name="@RayCast3D@20546" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="35"]
+target_position = Vector3(7.07107, 0, -7.07107)
+
+[node name="@RayCast3D@20547" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="36"]
+target_position = Vector3(8.09017, 0, -5.87785)
+
+[node name="@RayCast3D@20548" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="37"]
+target_position = Vector3(8.91007, 0, -4.53991)
+
+[node name="@RayCast3D@20549" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="38"]
+target_position = Vector3(9.51056, 0, -3.09017)
+
+[node name="@RayCast3D@20550" type="RayCast3D" parent="simulation/test_env_1/TurtleBot/lidar_mesh/lidar" index="39"]
+target_position = Vector3(9.87688, 0, -1.56434)
+
+[node name="simulation_sprite" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(265, 170)
+scale = Vector2(0.65, 0.65)
+texture = SubResource("ViewportTexture_p77bn")
+metadata/_edit_lock_ = true
+
+[node name="map" type="SubViewport" parent="."]
+size = Vector2i(800, 512)
+
+[node name="point_world" parent="map" instance=ExtResource("2_5ramx")]
+
+[node name="pointworld_sprite" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(795, 170)
+scale = Vector2(0.65, 0.65)
+texture = SubResource("ViewportTexture_2126a")
+
+[node name="lidar_preview" type="SubViewport" parent="."]
+size = Vector2i(320, 290)
+
+[node name="lidar_preview" parent="lidar_preview" instance=ExtResource("3_0fp2x")]
+
+[node name="lidar_preview_sprite" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(164, 492)
+texture = SubResource("ViewportTexture_kkkfn")
+
+[node name="background" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.890196, 0.890196, 0.890196, 1)
+
+[node name="controller" type="Node" parent="."]
+script = ExtResource("3_vleog")
+
+[node name="snapshot_button" type="Button" parent="controller"]
+offset_left = 332.0
+offset_top = 348.0
+offset_right = 450.0
+offset_bottom = 379.0
+text = "take snapshot"
+script = ExtResource("2_vdpue")
+
+[node name="compare_button" type="Button" parent="controller"]
+offset_left = 454.0
+offset_top = 348.0
+offset_right = 710.0
+offset_bottom = 379.0
+text = "compare consecutive snapshots"
+script = ExtResource("8_2j0dc")
+
+[node name="icp_button" type="Button" parent="controller"]
+offset_left = 715.0
+offset_top = 348.0
+offset_right = 825.0
+offset_bottom = 379.0
+text = "iterate icp
+"
+script = ExtResource("6_vs4tu")
+
+[node name="normals_button" type="Button" parent="controller"]
+offset_left = 845.0
+offset_top = 348.0
+offset_right = 921.0
+offset_bottom = 374.0
+text = "show normals"
+script = ExtResource("8_rocb8")
+
+[node name="TextEdit" type="TextEdit" parent="controller"]
+offset_left = 331.0
+offset_top = 385.0
+offset_right = 1101.0
+offset_bottom = 634.0
+placeholder_text = "Log"
+editable = false
+
+[node name="icp_gds" type="Node" parent="controller"]
+script = ExtResource("7_u4dqj")
+
+[node name="Icp" type="Icp" parent="controller"]
+
+[editable path="simulation/test_env_1"]
+[editable path="simulation/test_env_1/TurtleBot"]

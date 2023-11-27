@@ -1,0 +1,44 @@
+[gd_scene load_steps=8 format=3 uid="uid://ckqm1e308g6tl"]
+
+[ext_resource type="Script" path="res://scripts/lidar.gd" id="1_nysek"]
+[ext_resource type="Script" path="res://scripts/tb_nodes.gd" id="1_yisxd"]
+[ext_resource type="Material" uid="uid://bxibcm55xpcl1" path="res://assets/visible_occluded_material.tres" id="2_2n5aq"]
+[ext_resource type="Script" path="res://scripts/tb_movement_controller.gd" id="3_21ps4"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1xepk"]
+material = ExtResource("2_2n5aq")
+size = Vector3(0.3, 0.2, 0.3)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_0ua65"]
+material = ExtResource("2_2n5aq")
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.05
+
+[sub_resource type="PrismMesh" id="PrismMesh_4x13d"]
+material = ExtResource("2_2n5aq")
+size = Vector3(0.175, 0.11, 0.245)
+
+[node name="TurtleBot" type="Node3D" node_paths=PackedStringArray("lidar")]
+script = ExtResource("1_yisxd")
+lidar = NodePath("lidar_mesh/lidar")
+
+[node name="body_mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("BoxMesh_1xepk")
+
+[node name="lidar_mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.224694, 0)
+mesh = SubResource("CylinderMesh_0ua65")
+
+[node name="lidar" type="Node3D" parent="lidar_mesh"]
+script = ExtResource("1_nysek")
+raycast_count = 0
+
+[node name="movement_controller" type="Node3D" parent="."]
+script = ExtResource("3_21ps4")
+speed = 5.0
+
+[node name="nose_cone" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0.199301, 0.0950677, 0)
+mesh = SubResource("PrismMesh_4x13d")
