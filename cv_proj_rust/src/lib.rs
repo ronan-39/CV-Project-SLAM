@@ -6,6 +6,10 @@ use na::{SMatrix, SVector};
 mod icp;
 use icp::*;
 
+mod occupancy_map;
+mod occupancy_map_visualizer;
+use occupancy_map_visualizer::*;
+
 struct MyExtension;
 
 #[gdextension]
