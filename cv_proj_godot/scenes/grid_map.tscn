@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3 uid="uid://dnrwsy3q1eulp"]
+
+[ext_resource type="Script" path="res://scripts/control_multimesh_test.gd" id="1_du0fe"]
+[ext_resource type="Shader" path="res://scenes/grid.gdshader" id="2_bhgsw"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_j2x8s"]
+shader = ExtResource("2_bhgsw")
+shader_parameter/columns = 64.0
+shader_parameter/rows = 36.0
+shader_parameter/border_width = 0.04
+shader_parameter/border_color = null
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kht8l"]
+albedo_color = Color(0.509804, 1, 1, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_wdi4t"]
+material = SubResource("StandardMaterial3D_kht8l")
+size = Vector2(60, 60)
+
+[sub_resource type="MultiMesh" id="MultiMesh_swwbv"]
+use_colors = true
+mesh = SubResource("QuadMesh_wdi4t")
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_du0fe")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+visible = false
+
+[node name="grid" type="ColorRect" parent="CanvasLayer"]
+material = SubResource("ShaderMaterial_j2x8s")
+custom_minimum_size = Vector2(800, 512)
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="ColorRect" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(800, 512)
+offset_right = 800.0
+offset_bottom = 512.0
+color = Color(0.286275, 0.286275, 0.286275, 1)
+
+[node name="grid_map_test" type="MultiMeshInstance2D" parent="."]
+multimesh = SubResource("MultiMesh_swwbv")

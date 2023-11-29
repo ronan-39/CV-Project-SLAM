@@ -42,3 +42,18 @@ d={
 
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality.mobile=3
+
+[shader_globals]
+
+color_free={
+"type": "vec4",
+"value": Vector4(1, 0, 0, 1)
+}
+color_occupied={
+"type": "vec4",
+"value": Vector4(0, 1, 0, 1)
+}
+color_unknown={
+"type": "vec4",
+"value": Vector4(0, 0, 1, 1)
+}
