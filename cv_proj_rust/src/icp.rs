@@ -281,13 +281,13 @@ mod tests {
         let (p_values, chi_values, corresp_values) = icp_point_to_point_least_squares(&q, &p, 1);
 
         // correct
-        println!("chi values: {:?}", chi_values);
+        // println!("chi values: {:?}", chi_values);
         
         //correct
-        println!("p values: {:?}", p_values.last().unwrap());
+        // println!("p values: {:?}", p_values.last().unwrap());
         
         // correct
-        println!("corresp values: {:?}", corresp_values.last().unwrap());
+        // println!("corresp values: {:?}", corresp_values.last().unwrap());
     }
 
     #[test]
@@ -316,10 +316,10 @@ mod tests {
 
         let (p_values, chi_values, corresp_values) = icp_point_to_plane(&q, &p, 30);
         // correct
-        println!("chi values: {:?}", chi_values);
+        // println!("chi values: {:?}", chi_values);
 
         // //
-        println!("p values: {:?}", p_values.last().unwrap());
+        // println!("p values: {:?}", p_values.last().unwrap());
         
         // //
         // println!("corresp values: {:?}", corresp_values.last().unwrap());

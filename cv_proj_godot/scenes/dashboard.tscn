@@ -1,7 +1,7 @@
 [gd_scene load_steps=13 format=3 uid="uid://cvygwe34sxnb5"]
 
 [ext_resource type="PackedScene" uid="uid://cd3vabikmslif" path="res://scenes/test_env_1.tscn" id="1_xspcp"]
-[ext_resource type="PackedScene" uid="uid://dnrwsy3q1eulp" path="res://scenes/grid_map.tscn" id="2_5ramx"]
+[ext_resource type="PackedScene" uid="uid://deyfwmwydyk50" path="res://scenes/grid_map.tscn" id="2_5ramx"]
 [ext_resource type="Script" path="res://scripts/take_snapshot_button.gd" id="2_vdpue"]
 [ext_resource type="PackedScene" uid="uid://b1swp0d4dhma6" path="res://scenes/lidar_preview.tscn" id="3_0fp2x"]
 [ext_resource type="Script" path="res://scripts/controller.gd" id="3_vleog"]

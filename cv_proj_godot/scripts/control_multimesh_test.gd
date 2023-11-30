@@ -3,13 +3,19 @@ extends Node2D
 
 @onready var mm = $grid_map_test
 @onready var background = $background
-@onready var tile_material = preload("res://assets/grid_tile_material.tres")
+#@onready var tile_material = preload("res://assets/grid_tile_material.tres")
 
-@export var tile_x: int = 5
-@export var tile_y: int = 5
-@export var tile_size: int = 60
+@export var tile_x: int = 64
+@export var tile_y: int = 64
+@export var tile_size: int = 5
+
+@export var enable_debug: bool = false
 
 func _ready():
+	if enable_debug == false:
+		print("skipping")
+		return
+	
 	var quad = QuadMesh.new()
 	quad.size = Vector2(tile_size, tile_size)
 	#quad.material = tile_material
