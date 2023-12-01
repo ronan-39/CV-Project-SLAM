@@ -4,6 +4,7 @@ extends Node
 @onready var agent = environment.agent
 
 @onready var lidar_preview = $'../lidar_preview/lidar_preview'
+@onready var omv = $'../OccupancyMapVisualizer'
 
 @onready var logbox = $TextEdit
 @onready var icp_gds = $icp_gds
@@ -28,6 +29,9 @@ func _take_snapshot():
 	logbox.insert_line_at(0, log)
 	
 	lidar_preview.draw_points(snapshot)
+	
+	var robot_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
+	omv.update_map(snapshot, robot_pose)
 
 func _iterate_icp():
 	if len(snapshots) < 2:
@@ -67,6 +71,8 @@ func _show_normals():
 	var normal_endpoints = icp.get_normals_to_draw(snapshots[-1], 1)
 	lidar_preview.draw_normals(snapshots[-1], normal_endpoints)
 	
+func _clear_map():
+	omv.clear_map()
 
 func xz(vector):
 	return Vector2(vector.x, vector.z)

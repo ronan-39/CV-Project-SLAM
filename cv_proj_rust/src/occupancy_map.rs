@@ -9,6 +9,7 @@ pub struct OcMap {
     pub has_update: bool,
     pub dim_x: u32,
     pub dim_y: u32,
+    pub scale: f32,
 }
 
 impl OcMap {
@@ -19,6 +20,7 @@ impl OcMap {
             has_update: false,
             dim_x,
             dim_y,
+            scale: 5.0,
         }
     }
 
@@ -33,7 +35,8 @@ impl OcMap {
     // get the robot pose in map coordinates
     fn get_map_coords_pose(&self, agent_pose_world: Vector3<f32>) -> Vector3<f32> {
         let translation = self.get_origin_float();
-        let scale: f32 = 0.5;
+        // let scale: f32 = 5.0;
+        let scale = self.scale;
         let rotation = Matrix2::<f32>::identity() * scale;
 
         let map_t_world = Matrix3::new(rotation[(0,0)], rotation[(0,1)], translation[0] as f32,
@@ -46,21 +49,23 @@ impl OcMap {
         Vector3::new(map_coords[0], map_coords[1], agent_pose_world[2])
     }
 
-    fn update_by_scan(&mut self, scan_endpoints: Vec<Vector2<f32>>, robot_pose_world: Vector3<f32>) {
+    pub fn update_by_scan(&mut self, scan_endpoints: Vec<Vector2<f32>>, robot_pose_world: Vector3<f32>) {
+        // let scale: f32 = 5.0; // keep this consistent with above. move scale to be a property of the ocMap struct
+        let scale = self.scale;
+
         // pose of the robot in map coordinates
         let map_pose = self.get_map_coords_pose(robot_pose_world);
 
         // world_t_robot
         // a homogenous transform matrix that will transform any point in robot space to world space
         // let r = IsometryMatrix2::rotation(map_pose[2]);
-        let r = r(map_pose[2]) * 0.5;
+        let r = r(map_pose[2]) * scale;
         let pose_transform_pre = Matrix3::new(r[(0,0)], r[(0,1)], map_pose[0],
                                               r[(1,0)], r[(1,1)], map_pose[1],
                                                    0.0,      0.0,         1.0);
         // im slightly doubtful this worked, it was almost too easy of a bandaid fix
         //yes. it doesnt apply the translation to vectors. do transform_point(&vec2.into()) to get the full transformation
         let pose_transform = Transform2::from_matrix_unchecked(pose_transform_pre);
-        // println!("pose_transform: {:?}", pose_transform);
 
         // i know that the lidar scans are coming from the origin of the robot, so im cheating here (should multiply robot laser origin by pose transform)
         let scan_origin_f = Vector2::new(map_pose[0], map_pose[1]);
@@ -69,11 +74,8 @@ impl OcMap {
 
         for scan in scan_endpoints {
             let scan_end_map = pose_transform.transform_point(&scan.into());
-            // println!("pose_transform1: {:?}", pose_transform * scan);
-            // println!("pose_transform2: {:?}", pose_transform.transform_point(&scan.into()));
-            let scan_end_map_i = Vector2::<u32>::new((scan_end_map[0] + 0.5) as u32, (scan_end_map[1] + 0.5) as u32);
-            println!("scan_end_map_i: {:?}", scan_end_map_i);
 
+            let scan_end_map_i = Vector2::<u32>::new((scan_end_map[0] + 0.5) as u32, (scan_end_map[1] + 0.5) as u32);
 
             // rename the variables so this looks like it makes sense
             self.update_line_bresenhams(&scan_origin_i, &scan_end_map_i);
@@ -87,25 +89,54 @@ impl OcMap {
 
         let start_tuple = (start_map[0] as isize, start_map[1] as isize);
         let end_tuple = (end_map[0] as isize, end_map[1] as isize);
-        
-        println!("start_tuple: {:?}", start_tuple);
-        println!("end_tuple: {:?}", end_tuple);
 
         let mut last_index: Option<usize> = None;
 
         for (x,y) in Bresenham::new(start_tuple, end_tuple) {
-            // println!("(x,y): ({:?}, {:?})", x, y);
+            if x >= self.dim_x as isize || y < 0 {
+                continue;
+            }
+
+            if y >= self.dim_y as isize || y < 0 {
+                continue;
+            }
+
             let index = (y as u32 *self.dim_x + x as u32) as usize;
             last_index = Some(index);
             if index > self.tile_states.len() - 1 {
                 last_index = None;
                 continue
             }
-            self.tile_states[index] = TileState::Free;
+
+            // todo combine these into a match statement
+            if let TileState::Occupied = self.tile_states[index] {
+                return;
+            }
+
+            if let TileState::Free = self.tile_states[index] {
+                continue;
+            } else {
+                self.tile_states[index] = TileState::Free;
+                self.updated_indices.push(index);
+            }
         }
 
         if let Some(idx) = last_index {
             self.tile_states[idx] = TileState::Occupied;
+        }
+
+        self.has_update = true;
+    }
+
+    pub fn clear_map(&mut self) {
+        self.updated_indices = Vec::new();
+        // for state in &mut self.tile_states {
+        //     *state = TileState::Unknown;
+        // }
+        self.has_update = true;
+        for i in 0..self.tile_states.len() {
+            self.updated_indices.push(i); // this is bad and dumb but uhh ill fix it later
+            self.tile_states[i] = TileState::Unknown;
         }
     }
 
@@ -131,7 +162,8 @@ mod tests {
 
     #[test]
     fn test_get_map_coords_pose() {
-        let oc_map = OcMap::new(64, 64);
+        let mut oc_map = OcMap::new(64, 64);
+        oc_map.scale = 0.5;
 
         let world_pose_a = Vector3::new(0., 0., 0.);
         let world_pose_b = Vector3::new(10., 10., std::f32::consts::PI);
@@ -156,17 +188,17 @@ mod tests {
 
         oc_map.update_by_scan(scan_endpoints, robot_pose);
 
-        for (i, state) in oc_map.tile_states.iter().enumerate() {
-            if i%grid_size == 0 && i != 0  {
-                println!("");
-            }
-            match state {
-                TileState::Unknown => print!("X"),
-                TileState::Free => print!("0"),
-                TileState::Occupied => print!("1"),
-            };
-        }
-        println!("");
+        // for (i, state) in oc_map.tile_states.iter().enumerate() {
+        //     if i%grid_size == 0 && i != 0  {
+        //         println!("");
+        //     }
+        //     match state {
+        //         TileState::Unknown => print!("X"),
+        //         TileState::Free => print!("0"),
+        //         TileState::Occupied => print!("1"),
+        //     };
+        // }
+        // println!("");
     }
 
 }

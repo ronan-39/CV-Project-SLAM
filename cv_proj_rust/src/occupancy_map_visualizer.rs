@@ -1,5 +1,6 @@
 use godot::prelude::*;
 use godot::engine::{MultiMeshInstance2D, QuadMesh, MultiMesh};
+use na;
 
 use crate::occupancy_map::*;
 
@@ -22,8 +23,30 @@ struct OccupancyMapVisualizer {
 
 #[godot_api] // needed to export variables
 impl OccupancyMapVisualizer {
-    pub fn update_map_states() {
-        todo!();
+    #[func]
+    pub fn update_map(&mut self, scans: Array<Vector2>, robot_pose: Vector3) {
+        if let None = self.oc_map {
+            panic!("trying to update the map before its been made");
+        }
+
+        let scans_vec: Vec<na::Vector2<f32>> = scans.iter_shared().map(|v| na::Vector2::new(v.x, v.y)).collect();
+        let robot_pose_na = na::Vector3::new(robot_pose.x, robot_pose.y, robot_pose.z);
+
+        // godot_print!("robot_pose: {:?}", robot_pose);
+        // godot_print!("scans: {:?}", scans);
+        godot_print!("agent_angle: {:?}", robot_pose.z);
+
+        self.oc_map.as_mut().unwrap().update_by_scan(scans_vec, robot_pose_na)
+    }
+
+    #[func]
+    pub fn clear_map(&mut self) {
+        if let None = self.oc_map {
+            panic!("trying to clear the map before its been made");
+        }
+        godot_print!("clearing map");
+
+        self.oc_map.as_mut().unwrap().clear_map();
     }
 }
 
@@ -86,6 +109,28 @@ impl INode2D for OccupancyMapVisualizer {
         
         mmi.set_owner(self.base.clone().upcast());
         godot_print!("done");
+    }
+
+    fn physics_process(&mut self, delta: f64) {
+        if let None = self.oc_map {
+            return
+        }
+
+        // some of the most spaghetti rust code ive written in a while
+        // if this doesnt panic at runtime its a miracle
+        if self.oc_map.as_ref().unwrap().has_update {
+            godot_print!("updating map in physics_process()");
+            let mut multimesh = self.mmi.clone().unwrap().get_multimesh().unwrap();
+            for i in &self.oc_map.as_ref().unwrap().updated_indices {
+                (*multimesh).set_instance_color(*i as i32, match self.oc_map.as_ref().unwrap().tile_states[*i as usize] {
+                    TileState::Unknown => Color::from_rgba(0.6, 0.6, 0.6, 1.),
+                    TileState::Occupied => Color::from_rgba(0.05, 0.05, 0.05, 1.),
+                    TileState::Free => Color::from_rgba(0.95, 0.95, 0.95, 1.)
+                });
+            }
+
+            self.oc_map.as_mut().unwrap().has_update = false;
+        }
     }
 
 }
