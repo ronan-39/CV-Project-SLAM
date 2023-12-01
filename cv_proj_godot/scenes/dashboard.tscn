@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://cvygwe34sxnb5"]
+[gd_scene load_steps=15 format=3 uid="uid://cvygwe34sxnb5"]
 
 [ext_resource type="PackedScene" uid="uid://cd3vabikmslif" path="res://scenes/test_env_1.tscn" id="1_xspcp"]
 [ext_resource type="PackedScene" uid="uid://deyfwmwydyk50" path="res://scenes/grid_map.tscn" id="2_5ramx"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/compare_button.gd" id="8_2j0dc"]
 [ext_resource type="Script" path="res://scripts/normals_button.gd" id="8_rocb8"]
 [ext_resource type="Script" path="res://scenes/clear_map_button.gd" id="9_qtdgu"]
+[ext_resource type="Script" path="res://scenes/slam_gd.gd" id="11_5kuo6"]
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_p77bn"]
 viewport_path = NodePath("simulation")
@@ -396,17 +397,17 @@ text = "iterate icp
 script = ExtResource("6_vs4tu")
 
 [node name="normals_button" type="Button" parent="controller"]
-offset_left = 845.0
+offset_left = 829.0
 offset_top = 348.0
-offset_right = 921.0
-offset_bottom = 374.0
+offset_right = 946.0
+offset_bottom = 379.0
 text = "show normals"
 script = ExtResource("8_rocb8")
 
 [node name="clear_map_button" type="Button" parent="controller"]
-offset_left = 983.0
+offset_left = 956.0
 offset_top = 347.0
-offset_right = 1068.0
+offset_right = 1041.0
 offset_bottom = 378.0
 text = "clear map
 "
@@ -420,15 +421,38 @@ offset_bottom = 634.0
 placeholder_text = "Log"
 editable = false
 
+[node name="stepped_scans" type="CheckButton" parent="controller"]
+offset_left = 926.0
+offset_top = 391.0
+offset_right = 1096.0
+offset_bottom = 422.0
+text = "stepped scans"
+alignment = 2
+text_overrun_behavior = 1
+
 [node name="icp_gds" type="Node" parent="controller"]
 script = ExtResource("7_u4dqj")
 
-[node name="Icp" type="Icp" parent="controller"]
+[node name="step_scan" type="Button" parent="controller"]
+offset_left = 1055.0
+offset_top = 346.0
+offset_right = 1136.0
+offset_bottom = 377.0
+text = "step scan"
+
+[node name="Icp" type="Icp" parent="."]
 
 [node name="OccupancyMapVisualizer" type="OccupancyMapVisualizer" parent="."]
 dim_x = 100
 dim_y = 100
 position = Vector2(566, 11)
+
+[node name="SLAM_GD" type="Node" parent="."]
+script = ExtResource("11_5kuo6")
+
+[connection signal="toggled" from="controller/stepped_scans" to="SLAM_GD" method="_on_stepped_scans_toggled"]
+[connection signal="pressed" from="controller/step_scan" to="SLAM_GD" method="_on_step_scan_pressed"]
+[connection signal="console_log" from="SLAM_GD" to="controller" method="_on_slam_gd_console_log"]
 
 [editable path="simulation/test_env_1"]
 [editable path="simulation/test_env_1/TurtleBot"]

@@ -8,7 +8,7 @@ extends Node
 
 @onready var logbox = $TextEdit
 @onready var icp_gds = $icp_gds
-@onready var icp = $Icp
+@onready var icp = $'../Icp'
 
 var snapshots: Array = []
 
@@ -30,6 +30,7 @@ func _take_snapshot():
 	
 	lidar_preview.draw_points(snapshot)
 	
+	# todo why do i have to make the x negative and rotation negative?
 	var robot_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
 	omv.update_map(snapshot, robot_pose)
 
@@ -76,3 +77,7 @@ func _clear_map():
 
 func xz(vector):
 	return Vector2(vector.x, vector.z)
+
+
+func _on_slam_gd_console_log(str):
+	logbox.insert_line_at(0, str)
