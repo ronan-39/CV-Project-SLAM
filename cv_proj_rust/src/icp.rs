@@ -34,7 +34,9 @@ pub fn icp_point_to_point_least_squares(source: &Vec<Vector2<f32>>, target: &Vec
 }
 
 pub fn icp_point_to_plane(source: &Vec<Vector2<f32>>, target: &Vec<Vector2<f32>>, n: usize
-    ) -> (Vec<Vec<Vector2<f32>>>, Vec<f32>, Vec<Vec<usize>>) {
+    ) -> (Vec<Vec<Vector2<f32>>>, Vec<f32>, Vec<Vec<usize>>, Matrix3<f32>) {
+    let mut accumulated_transform = Matrix3::<f32>::identity();
+
     let mut pose = Vector3::<f32>::zeros();
     let mut chi_values = Vec::<f32>::new();
     let mut pose_values = vec![pose.clone()];
@@ -58,12 +60,28 @@ pub fn icp_point_to_plane(source: &Vec<Vector2<f32>>, target: &Vec<Vector2<f32>>
 
         rot = r(pose[2]);
         t = pose.fixed_rows::<2>(0).into();
+
+        // let transform = Matrix3::new(rot[(0,0)], rot[(0,1)], t[0],
+        //                              rot[(1,0)], rot[(1,1)], t[1],
+        //                                     0.0,        0.0,  1.0);
+        // accumulated_transform = transform * accumulated_transform;
+        let transform = Matrix3::new(0., 0., dx[0],
+                                     0., 0., dx[1],
+                                     0., 0., 1.0);
+        accumulated_transform += transform;
+
+        // accumulated_transform[(0,0)] += pose[2];
+
         target_copy = target.clone().iter().map(|point| rot * point + t).collect();
         target_values.push(target_copy.clone()); // could remove the clone if i replace target_copy on line xx with target_values.last().unwrap()
     }
     corresp_values.push(corresp_values.last().unwrap().clone());
 
-    (target_values, chi_values, corresp_values)
+    accumulated_transform[(0,0)] = pose[0];
+    accumulated_transform[(1,0)] = pose[1];
+    accumulated_transform[(2,0)] = pose[2];
+
+    (target_values, chi_values, corresp_values, accumulated_transform)
 }
 
 fn prepare_system_normals(pose: Vector3<f32>, target: &Vec<Vector2<f32>>, source: &Vec<Vector2<f32>>, correspondences: &Vec<usize>, source_normals: &Vec<Vector2<f32>>
@@ -80,14 +98,9 @@ fn prepare_system_normals(pose: Vector3<f32>, target: &Vec<Vector2<f32>>, source
         let q_point = source[*j];
         let normal = source_normals[*j];
         let e: f32 = normal.dot(&error(pose, p_point, q_point));
-        // let e = error(pose, p_point, q_point);
         let jcb = normal.transpose() * jacobian(pose, p_point); // dimensions dont match
-        // let jcb: Vector3<f32> = jacobian(pose, p_point);
         h += jcb.transpose() * jcb;
         g += jcb.transpose() * e;
-        // println!("{:?}th e: {:?}", i, e);
-        // println!("{:?}th normal: {:?}", i, normal);
-        // println!("{:?}th j: {:?}", i, j);
         chi += e * e;
     }
     (h, g, chi)

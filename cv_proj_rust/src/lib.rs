@@ -40,6 +40,7 @@ impl Icp {
 
     #[func]
     fn icp_svd(pc_1: Array<Vector2>, pc_2: Array<Vector2>, n: u32) -> Transform2D {
+        godot_print!("should not be using this");
 
         let (center_of_source, source_centered) = center_data(&pc_1);
         let (center_of_target, target_centered) = center_data(&pc_2);
@@ -160,10 +161,32 @@ impl Icp {
                 .map(|v| SVector::<f32, 2>::new(v.x, v.y))
                 .collect::<Vec<SVector::<f32,2>>>();
 
-        let (target_values, chi_values, corresp_values) = icp::icp_point_to_plane(&source, &target, n as usize);
+        let (target_values, chi_values, corresp_values, accumulated_transform) = icp::icp_point_to_plane(&source, &target, n as usize);
         let result: Array<Vector2> = target_values.last().unwrap().iter().map(|v| Vector2::new(v[0], v[1])).collect();
 
         result
+    }
+
+    // in some cases I will want the points, in some cases I will want the transform. I'm not sure how to return both in one function
+    // so I made two. This isn't ideal but what can you do.
+    #[func]
+    fn icp_point_to_plane_transform(source_godot: Array<Vector2>, target_godot: Array<Vector2>, n: u32) -> Vector3 {
+        let mut source = source_godot.iter_shared()
+        .map(|v| SVector::<f32, 2>::new(v.x, v.y))
+        .collect::<Vec<SVector::<f32,2>>>();
+
+        let mut target = target_godot.iter_shared()
+                .map(|v| SVector::<f32, 2>::new(v.x, v.y))
+                .collect::<Vec<SVector::<f32,2>>>();
+
+        let (target_values, chi_values, corresp_values, accumulated_transform) = icp::icp_point_to_plane(&source, &target, n as usize);
+        // let result: Array<Vector2> = target_values.last().unwrap().iter().map(|v| Vector2::new(v[0], v[1])).collect();
+
+        let r: f32 = accumulated_transform[(0,0)];
+        // let t = accumulated_transform.fixed_view::<2>((0,2), (2,1));
+
+        // Vector3::new(accumulated_transform[(0,2)], accumulated_transform[(1,2)], r)
+        Vector3::new(accumulated_transform[(0,0)], accumulated_transform[(1,0)], accumulated_transform[(2,0)])
     }
 
     #[func]

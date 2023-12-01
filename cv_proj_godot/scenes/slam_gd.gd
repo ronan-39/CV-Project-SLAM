@@ -10,7 +10,7 @@ signal console_log(str)
 @onready var lidar_preview = $'../lidar_preview/lidar_preview'
 
 var stepped_scans: bool = true
-var scan_interval: int = 60
+var scan_interval: int = 5 # frames between scans
 var interval_tracker: int = 0
 
 var snapshots_max_size = 10
@@ -18,6 +18,7 @@ var snapshots = []
 var this_is_the_first_scan = true
 
 var agent_pose = Vector3(0., 0., 0.,)
+var previous_pose = Vector3(0., 0., 0.,)
 
 func _ready():
 	pass
@@ -62,10 +63,17 @@ func scan():
 
 func update_agent_pose():
 	# cheating while testing
-	agent_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
+	#agent_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
 	
 	# use icp to find the transfrom from the previous two scans, then apply that transform to the stored pose
-	pass
+	var transform = icp.icp_point_to_plane_transform(snapshots[-2], snapshots[-1], 10)
+	agent_pose += transform
+	
+	print("what i think transform should be:")
+	print(transform)
+	
+	print("what it is")
+	print(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y))
 
 func xz(vector):
 	return Vector2(vector.x, vector.z)

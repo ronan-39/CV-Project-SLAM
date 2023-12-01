@@ -32,10 +32,6 @@ impl OccupancyMapVisualizer {
         let scans_vec: Vec<na::Vector2<f32>> = scans.iter_shared().map(|v| na::Vector2::new(v.x, v.y)).collect();
         let robot_pose_na = na::Vector3::new(robot_pose.x, robot_pose.y, robot_pose.z);
 
-        // godot_print!("robot_pose: {:?}", robot_pose);
-        // godot_print!("scans: {:?}", scans);
-        godot_print!("agent_angle: {:?}", robot_pose.z);
-
         self.oc_map.as_mut().unwrap().update_by_scan(scans_vec, robot_pose_na)
     }
 
@@ -64,7 +60,7 @@ impl INode2D for OccupancyMapVisualizer {
     }
 
     fn ready(&mut self) {
-        godot_print!("creating the occupancy map visualization");
+        godot_print!("creating the occupancy map visualization in release mode!");
         godot_print!("{:?}", self.base.get_children());
 
         self.oc_map = Some(OcMap::new(self.dim_x, self.dim_y));
@@ -119,7 +115,6 @@ impl INode2D for OccupancyMapVisualizer {
         // some of the most spaghetti rust code ive written in a while
         // if this doesnt panic at runtime its a miracle
         if self.oc_map.as_ref().unwrap().has_update {
-            godot_print!("updating map in physics_process()");
             let mut multimesh = self.mmi.clone().unwrap().get_multimesh().unwrap();
             for i in &self.oc_map.as_ref().unwrap().updated_indices {
                 (*multimesh).set_instance_color(*i as i32, match self.oc_map.as_ref().unwrap().tile_states[*i as usize] {

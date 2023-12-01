@@ -10,13 +10,13 @@ var normals = []
 
 func _draw():
 	for point in to_draw:
-		draw_circle(point, 3.0, Color.DARK_RED)
+		draw_circle(point, 2.0, Color.DARK_RED)
 		
 	for p in icp_1:
-		draw_circle(p, 3.0, Color.DARK_BLUE)
+		draw_circle(p, 2.0, Color.DARK_BLUE)
 	
 	for p in icp_2:
-		draw_circle(p, 3.0, Color.DARK_GREEN)
+		draw_circle(p, 2.0, Color.DARK_GREEN)
 		
 	for n in normals:
 		draw_line(n[0], n[1], Color.AQUA)
