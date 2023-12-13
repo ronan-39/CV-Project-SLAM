@@ -1,8 +1,7 @@
-[gd_scene load_steps=16 format=3 uid="uid://cvygwe34sxnb5"]
+[gd_scene load_steps=15 format=3 uid="uid://cvygwe34sxnb5"]
 
 [ext_resource type="PackedScene" uid="uid://cd3vabikmslif" path="res://scenes/test_env_1.tscn" id="1_xspcp"]
 [ext_resource type="PackedScene" uid="uid://deyfwmwydyk50" path="res://scenes/grid_map.tscn" id="2_5ramx"]
-[ext_resource type="Script" path="res://scenes/location_label.gd" id="2_b5wl2"]
 [ext_resource type="Script" path="res://scripts/take_snapshot_button.gd" id="2_vdpue"]
 [ext_resource type="PackedScene" uid="uid://b1swp0d4dhma6" path="res://scenes/lidar_preview.tscn" id="3_0fp2x"]
 [ext_resource type="Script" path="res://scripts/controller.gd" id="3_vleog"]
@@ -342,21 +341,6 @@ scale = Vector2(0.65, 0.65)
 texture = SubResource("ViewportTexture_p77bn")
 metadata/_edit_lock_ = true
 
-[node name="Label" type="Label" parent="simulation_sprite"]
-offset_left = -393.846
-offset_top = -250.769
-offset_right = -282.846
-offset_bottom = -227.769
-text = "agent location:"
-
-[node name="location_label" type="Label" parent="simulation_sprite"]
-offset_left = -392.308
-offset_top = -230.769
-offset_right = -347.308
-offset_bottom = -207.769
-text = "xxxxx"
-script = ExtResource("2_b5wl2")
-
 [node name="map" type="SubViewport" parent="."]
 size = Vector2i(800, 512)
 
@@ -476,7 +460,7 @@ text = "match scan to map"
 [node name="OccupancyMapVisualizer" type="OccupancyMapVisualizer" parent="."]
 dim_x = 100
 dim_y = 100
-position = Vector2(534, 12)
+position = Vector2(535, 8)
 
 [node name="SLAM_GD" type="Node" parent="."]
 script = ExtResource("11_5kuo6")
@@ -484,8 +468,7 @@ script = ExtResource("11_5kuo6")
 [node name="SnapshotOMV" type="OccupancyMapVisualizer" parent="."]
 dim_x = 100
 dim_y = 100
-position = Vector2(838, 303)
-rotation = -1.5708
+position = Vector2(845, 5)
 
 [connection signal="toggled" from="controller/stepped_scans" to="SLAM_GD" method="_on_stepped_scans_toggled"]
 [connection signal="pressed" from="controller/step_scan" to="SLAM_GD" method="_on_step_scan_pressed"]

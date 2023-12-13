@@ -1,7 +1,8 @@
-use na::{SMatrix, SVector, Vector2, Matrix2, Vector3, Matrix3, Matrix2x3, Transform2, IsometryMatrix2};
+use na::{SMatrix, SVector, Vector2, Matrix2, Vector3, Matrix3, Matrix2x3, Transform2, IsometryMatrix2, Vector4};
+use bresenham::Bresenham;
+use moka::sync::Cache;
 
 use crate::occupancy_map_visualizer;
-use bresenham::Bresenham;
 
 pub struct OcMap {
     pub tile_states: Vec<TileState>,
@@ -10,6 +11,8 @@ pub struct OcMap {
     pub dim_x: u32,
     pub dim_y: u32,
     pub scale: f32,
+    intensities: Vector4<f32>,
+    cache: Cache<u32, f32>,
 }
 
 impl OcMap {
@@ -21,6 +24,8 @@ impl OcMap {
             dim_x,
             dim_y,
             scale: 5.0,
+            intensities: Vector4::zeros(),
+            cache: Cache::new(10_000),
         }
     }
 
@@ -84,6 +89,14 @@ impl OcMap {
         self.has_update = true;
     }
 
+    // take input in grid space
+    pub fn set_agent_location(&mut self, pos: Vector2<f32>) {
+        let map_coords = self.get_map_coords_pose(Vector3::new(pos.x, pos.y, 0.));
+        let index = (map_coords.y as u32 * self.dim_x + map_coords.x as u32) as usize;
+        self.tile_states[index] = TileState::AgentPos;
+        self.updated_indices.push(index);
+    }
+
     fn update_line_bresenhams(&mut self, start_map: &Vector2<u32>, end_map: &Vector2<u32>) {
         // let max_len: u32 = 500;
 
@@ -92,38 +105,74 @@ impl OcMap {
 
         let mut last_index: Option<usize> = None;
 
-        for (x,y) in Bresenham::new(start_tuple, end_tuple) {
-            if x >= self.dim_x as isize || y < 0 {
+        let line_coords: Vec<(isize, isize)> = Bresenham::new(start_tuple, end_tuple).collect();
+        if line_coords.len() == 0 {
+            return;
+        }
+        let last_xy = line_coords.last().unwrap();
+        let last_index_known = (last_xy.1 as u32 *self.dim_x + last_xy.0 as u32) as usize;
+        let len = line_coords.len();
+
+        // for (x,y) in Bresenham::new(start_tuple, end_tuple) {
+        for (i, (x,y)) in line_coords.iter().enumerate() {
+            if x >= &(self.dim_x as isize) || y < &0 {
                 continue;
             }
 
-            if y >= self.dim_y as isize || y < 0 {
+            if y >= &(self.dim_y as isize) || y < &0 {
                 continue;
             }
 
-            let index = (y as u32 *self.dim_x + x as u32) as usize;
+            let index = (*y as u32 *self.dim_x + *x as u32) as usize;
             last_index = Some(index);
             if index > self.tile_states.len() - 1 {
                 last_index = None;
                 continue
             }
 
+            // if index == last_index_known {
+            //     break;
+            // }
+
             // todo combine these into a match statement
-            if let TileState::Occupied = self.tile_states[index] {
-                return;
-            }
+            // if let TileState::Occupied = self.tile_states[index] {
+            //     return;
+            //     // break;
+            // }
 
-            if let TileState::Free = self.tile_states[index] {
-                continue;
-            } else {
-                self.tile_states[index] = TileState::Free;
-                self.updated_indices.push(index);
-            }
+            // // if let TileState::Free = self.tile_states[index] {
+            // //     continue;
+            // // } else {
+            // //     self.tile_states[index] = TileState::Free;
+            // //     self.updated_indices.push(index);
+            // // }
+
+            // if let TileState::Unknown = self.tile_states[index] {
+            //     self.tile_states[index] = TileState::Free;
+            //     self.updated_indices.push(index);
+            // }
+
+            match self.tile_states[index] {
+                TileState::Occupied => break,
+                //TileState::Free => continue,
+                TileState::Unknown | TileState::Free => {
+                    if i == len-1 {
+                        self.tile_states[index] = TileState::Occupied;
+                    } else {
+                        self.tile_states[index] = TileState::Free;
+                    }
+                    self.updated_indices.push(index);
+                }
+                _ => continue,
+            };
         }
 
-        if let Some(idx) = last_index {
-            self.tile_states[idx] = TileState::Occupied;
-        }
+        // if let Some(idx) = last_index {
+        //     if let TileState::Unknown = self.tile_states[idx] {
+        //         self.tile_states[idx] = TileState::Occupied;
+        //         self.updated_indices.push(idx);
+        //     }
+        // }
 
         self.has_update = true;
     }
@@ -140,6 +189,137 @@ impl OcMap {
         }
     }
 
+    pub fn get_complete_hessian_derivs(&mut self, pose: Vector3<f32>, scan_endpoints: Vec<Vector2<f32>>, h: &mut Matrix3<f32>, d_t_r: &mut Vector3<f32>) {
+        let size = scan_endpoints.len();
+
+        let r = r(pose[2]);
+        let transform_pre = Matrix3::new(r[(0,0)], r[(0,1)], pose[0],
+                                     r[(1,0)], r[(1,1)], pose[1],
+                                          0.0,      0.0,     1.0);
+        let transform = Transform2::from_matrix_unchecked(transform_pre);
+
+        let sin_rot = pose[2].sin();
+        let cos_rot = pose[2].cos();
+
+        *h = Matrix3::<f32>::zeros();
+        *d_t_r = Vector3::<f32>::zeros();
+
+        for curr_point in scan_endpoints {
+            // let curr_point = &scan_endpoints[i];
+
+            let transformed_point: na::Point<f32, 2> = transform.transform_point(&curr_point.into());
+            let transformed_point_as_vec: Vector2<f32> = Vector2::new(transformed_point.x, transformed_point.y);
+            let transformed_scan_endpoint = self.interp_map_value_with_derivs(transformed_point_as_vec);
+
+            let fun_val: f32 = 1.0 - transformed_scan_endpoint[0];
+
+            d_t_r[0] += transformed_scan_endpoint[1] * fun_val;
+            d_t_r[1] += transformed_scan_endpoint[2] * fun_val; // why are they using the third element in the scan endpoints??
+        }
+    }
+
+    fn my_compute_hessian(&self, pose: Vector3<f32>, scan_endpoints: Vec<Vector2<f32>>) -> () {
+        let map_gradient = Matrix2x3::new(
+            1.0, 0.0, -pose[2].sin() - pose[2].cos(),
+            0.0, 1.0,  pose[2].cos() - pose[2].sin()
+        );
+
+        // let occ_value_gradient = interp_map_value_with_derivs()
+        // let intermediate = 
+    }
+
+    fn interp_map_value_with_derivs(&mut self, coords: Vector2<f32>) -> Vector3<f32> {
+        // bottom left corner of the index of the coordinate
+        let scaled_coords = coords * 1.0;//self.scale;
+        let ind_min = Vector2::new(scaled_coords[0] as u32, scaled_coords[1] as u32); 
+
+        let factors: Vector2<f32> = scaled_coords - Vector2::new(ind_min[0] as f32, ind_min[1] as f32);
+
+        let mut index = ind_min[1] * self.dim_x + ind_min[0];
+
+        // get grid values for the 4 grid points surrounding the current coordinates
+        // check the cache first
+        // filter grid_point with gaussian and store in the cache (whatever that means)
+        if self.cache.contains_key(&index) {
+            self.intensities[0] = self.cache.get(&index).unwrap();
+        } else {
+            self.intensities[0] = self.get_grid_possibility_map(index);
+            self.cache.insert(index, self.intensities[0]);
+        }
+
+        index+=1;
+
+        if self.cache.contains_key(&index) {
+            self.intensities[1] = self.cache.get(&index).unwrap();
+        } else {
+            self.intensities[1] = self.get_grid_possibility_map(index);
+            self.cache.insert(index, self.intensities[1]);
+        }
+
+        index+=self.dim_x-1;
+
+        if self.cache.contains_key(&index) {
+            self.intensities[2] = self.cache.get(&index).unwrap();
+        } else {
+            self.intensities[2] = self.get_grid_possibility_map(index);
+            self.cache.insert(index, self.intensities[2]);
+        }
+
+        index+=1;
+
+        if self.cache.contains_key(&index) {
+            self.intensities[3] = self.cache.get(&index).unwrap();
+        } else {
+            self.intensities[3] = self.get_grid_possibility_map(index);
+            self.cache.insert(index, self.intensities[3]);
+        }
+
+        let dx1: f32 = self.intensities[0] - self.intensities[1];
+        let dx2: f32 = self.intensities[2] - self.intensities[3];
+
+        let dy1: f32 = self.intensities[0] - self.intensities[2];
+        let dy2: f32 = self.intensities[1] - self.intensities[3];
+
+        let x_fac_inv = 1.0 - factors[0];
+        let y_fac_inv = 1.0 - factors[1];
+
+        Vector3::<f32>::new(
+            ((self.intensities[0] * x_fac_inv + self.intensities[1] * factors[0]) * y_fac_inv) + ((self.intensities[2] * x_fac_inv + self.intensities[3] * factors[0]) * factors[1]),
+            -((dx1 * x_fac_inv) + (dx2 * factors[0])),
+            -((dy1 * y_fac_inv) + (dy2 * factors[1]))
+        )
+    }
+
+    fn get_unfiltered_grid_point(&self, coords: Vector2<u32>) -> f32 {
+        return self.get_grid_possibility_map(coords.x + coords.y * self.dim_x);
+    }
+
+    fn get_grid_possibility_map(&self, index: u32) -> f32 {
+        match self.tile_states[index as usize] {
+            TileState::Unknown => 0.5,
+            TileState::Occupied => 1.0,
+            TileState::Free => 0.0,
+            TileState::Possible(x) => x,
+            TileState::AgentPos => 0.0
+        }
+    }
+
+    pub fn get_pc(&self) -> Vec<Vector2<f32>> {
+        let pc: Vec<Vector2<f32>> = self.tile_states
+            .iter()
+            .enumerate()
+            .filter(|(i,state)| matches!(state, TileState::Occupied))
+            .map(|(i,state)|
+            {
+                let x: usize = i%self.dim_x as usize;
+                let y: usize = i/self.dim_x as usize;
+                Vector2::new(x as f32 - 50., y as f32 - 50.) / self.scale
+            }
+            ).collect();
+
+            return pc;
+    }
+
 }
 
 
@@ -152,7 +332,9 @@ fn r(theta: f32) -> Matrix2<f32> {
 pub enum TileState {
     Unknown,
     Occupied,
-    Free
+    Free,
+    Possible(f32),
+    AgentPos,
 }
 
 // cargo test -- --nocapture to run and see prints

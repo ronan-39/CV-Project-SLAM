@@ -476,7 +476,8 @@ text = "match scan to map"
 [node name="OccupancyMapVisualizer" type="OccupancyMapVisualizer" parent="."]
 dim_x = 100
 dim_y = 100
-position = Vector2(534, 12)
+position = Vector2(530.69, 303)
+rotation = -1.5708
 
 [node name="SLAM_GD" type="Node" parent="."]
 script = ExtResource("11_5kuo6")

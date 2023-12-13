@@ -44,6 +44,35 @@ impl OccupancyMapVisualizer {
 
         self.oc_map.as_mut().unwrap().clear_map();
     }
+
+    #[func]
+    pub fn match_to_map(&mut self, map_node: Gd<OccupancyMapVisualizer>) {
+        if let None = self.oc_map {
+            godot_print!("the map hasnt been created yet");
+            panic!();
+        }
+
+        godot_print!("matching a map to a map");
+        // self.clear_map();
+
+        // let pc1: Vec<Vector2<f32>> = self.oc_map.unwrap().tile_states
+        //                                 .iter()
+        //                                 .map(|x|)
+    }
+
+    #[func]
+    pub fn get_pc_gd(&self) -> Array<Vector2> {
+        if let None = self.oc_map { godot_print!("map hasnt been initialized!"); panic!(); }
+
+        self.oc_map.as_ref().unwrap().get_pc().iter().map(|x| Vector2::new(x.x, x.y)).collect::<Array<Vector2>>()
+    }
+
+    #[func]
+    pub fn show_agent_location(&mut self, pos: Vector2) {
+        if let None = self.oc_map { godot_print!("map hasnt been initialized!"); panic!(); }
+
+        self.oc_map.as_mut().unwrap().set_agent_location(na::Vector2::new(pos.x, pos.y));
+    }
 }
 
 #[godot_api]
@@ -60,7 +89,7 @@ impl INode2D for OccupancyMapVisualizer {
     }
 
     fn ready(&mut self) {
-        godot_print!("creating the occupancy map visualization in release mode!");
+        godot_print!("creating the occupancy map visualization in debug mode!");
         godot_print!("{:?}", self.base.get_children());
 
         self.oc_map = Some(OcMap::new(self.dim_x, self.dim_y));
@@ -89,7 +118,9 @@ impl INode2D for OccupancyMapVisualizer {
             (*multimesh).set_instance_color(i, match self.oc_map.as_ref().unwrap().tile_states[i as usize] {
                 TileState::Unknown => Color::from_rgba(0.6, 0.6, 0.6, 1.),
                 TileState::Occupied => Color::from_rgba(0.05, 0.05, 0.05, 1.),
-                TileState::Free => Color::from_rgba(0.95, 0.95, 0.95, 1.)
+                TileState::Free => Color::from_rgba(0.95, 0.95, 0.95, 1.),
+                TileState::Possible(_) => Color::from_rgba(1.0, 0., 0., 1.),
+                TileState::AgentPos => Color::from_rgba(0., 1.0, 0., 1.),
             });
 
             // if i%3 == 0 {
@@ -120,7 +151,9 @@ impl INode2D for OccupancyMapVisualizer {
                 (*multimesh).set_instance_color(*i as i32, match self.oc_map.as_ref().unwrap().tile_states[*i as usize] {
                     TileState::Unknown => Color::from_rgba(0.6, 0.6, 0.6, 1.),
                     TileState::Occupied => Color::from_rgba(0.05, 0.05, 0.05, 1.),
-                    TileState::Free => Color::from_rgba(0.95, 0.95, 0.95, 1.)
+                    TileState::Free => Color::from_rgba(0.95, 0.95, 0.95, 1.),
+                    TileState::Possible(_) => Color::from_rgba(1.0, 0., 0., 1.),
+                    TileState::AgentPos => Color::from_rgba(0., 1.0, 0., 1.),
                 });
             }
 

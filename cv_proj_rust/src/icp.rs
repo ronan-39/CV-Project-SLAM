@@ -189,6 +189,10 @@ pub fn compute_normals(points: &Vec<Vector2<f32>>, step: Option<usize>) -> (Vec<
     let mut normals: Vec<Vector2::<f32>> = vec![Vector2::new(0., 0.,)];
     let mut normals_at_points = Vec::<Vector2<f32>>::new();
 
+    if points.len() < step_ {
+        panic!("there are no points")
+    }
+
     for i in step_..points.len()-step_ {
         let prev_point = points[i-step_];
         let next_point = points[i+step_];

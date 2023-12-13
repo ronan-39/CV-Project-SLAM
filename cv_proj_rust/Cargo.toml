@@ -16,3 +16,4 @@ nalgebra = "0.32.3"
 # openblas-src = { version = "0.10.8", features = ["system"] }
 lstsq = "0.5.0"
 bresenham = "0.1.1"
+moka = { version = "0.12.1", features = ["sync" ]}
