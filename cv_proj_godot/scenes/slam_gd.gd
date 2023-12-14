@@ -19,33 +19,38 @@ var this_is_the_first_scan = true
 
 var agent_pose = Vector3(0., 0., 0.,)
 var previous_pose = Vector3(0., 0., 0.,)
+var true_agent_pose = Vector3(0., 0., 0.,)
 
 func _ready():
 	pass
 
 func _physics_process(delta):
+	true_agent_pose = Vector3(agent.transform.origin.x, agent.transform.origin.z, -agent.rotation.y)
+	
 	if interval_tracker == scan_interval:
 		interval_tracker = 0
 		scan()
-		lidar_preview.draw_points(snapshots[-1])
+		#lidar_preview.draw_points(snapshots[-1])
 		
 		# if it IS the first scan, then the pose is 0,0,0, which is already the default
+		previous_pose = agent_pose
+		
 		if !this_is_the_first_scan:
 			#update_agent_pose()
+			update_agent_pose_cheating()
 			update_agent_pose_from_map()
 		
 		this_is_the_first_scan = false
 			
+		#omv.update_map(snapshots[-1], world_pose_to_grid_pose(agent_pose))
 		omv.update_map(snapshots[-1], agent_pose)
-		previous_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
+		#previous_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
 	
 	if !stepped_scans:
 		interval_tracker+=1
 		
-	omv.show_agent_location(world_to_grid(xz(agent.transform.origin)))
-	#print(world_to_grid(Vector2(5., 0)))
-	#omv.show_agent_location(world_to_grid(Vector2(5., 0.)))
-	#omv.show_agent_location(Vector2(-5.0, 0.0))
+	#omv.show_agent_location(world_to_grid(xy(true_agent_pose)))
+	omv.show_agent_location(xy(agent_pose))
 
 func step():
 	# make a scan be taken next time physics_process() runs
@@ -59,8 +64,8 @@ func scan():
 	for c in agent.lidar.get_children():
 		if c.get_collision_point() == Vector3.ZERO:
 			continue # avoid bug where it collides with nothing at the origin
-		#snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)).rotated(agent_rotation - PI/2))
-		snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)))
+		snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)).rotated(agent_rotation - PI/2))
+		#snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)))
 		log += str(snapshot[-1])
 		log += " "
 	snapshots.append(snapshot)
@@ -91,28 +96,47 @@ func update_agent_pose():
 	print(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y) - previous_pose)
 
 func update_agent_pose_from_map():
-	var pose_estimate = previous_pose
-	var map_pc = omv.get_pc_gd()
-	var scan_pc: Array[Vector2] = []
-	for s in snapshots[-1]:
-		scan_pc.append(s + xy(pose_estimate))
-	
-	var transform = icp.icp_point_to_plane_transform(map_pc, scan_pc, 10)
-	var corrected_points = icp.icp_point_to_plane(map_pc, scan_pc, 10)
-	lidar_preview.draw_icp(map_pc, corrected_points)
-	var tf = Vector2(-transform.y, transform.x)
-	print("transform: ", tf)
-	
-	#agent_pose += Vector3(tf.x, tf.y, 0.)
-	agent_pose += transform
-	print("agent pose: ", agent_pose)
+	#console_log.emit("Updating agent pose from map:")
+	var snapshot = snapshots[-1]
+	var agent_rotation = agent.rotation.y
+	var pose_estimate = agent_pose
 
+	var snapshot_at_best_guess: Array[Vector2] = []
+	for p in snapshot:
+		snapshot_at_best_guess.append(xy(pose_estimate) + (p).rotated(-agent_rotation))
+
+	var oc_map_pc: Array[Vector2] = omv.get_pc_gd()
+	
+	lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
+	
+	var corrected_points = icp.icp_point_to_plane(oc_map_pc, snapshot_at_best_guess, 7)
+	var transform = icp.icp_point_to_plane_transform(oc_map_pc, snapshot_at_best_guess, 7)
+	#lidar_preview.draw_icp(oc_map_pc, corrected_points)
+	#lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
+	var new_pose_estimate_grid = transform + pose_estimate
+	print("new estimated pose (in gird space): ", new_pose_estimate_grid)
+	print("new estimated pose (in world space): ", grid_to_world(new_pose_estimate_grid))
+	console_log.emit("Setting the agent pose to latest estimate: " + str(new_pose_estimate_grid))
+	agent_pose = new_pose_estimate_grid
+	agent_pose.z = -agent.rotation.y
+
+# for debug purposes, this function sets the pose to the ground truth value
+func update_agent_pose_cheating():
+	#agent_pose = Vector3(agent.transform.origin.x, agent.transform.origin.z, agent.rotation.y)
+	agent_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
+	console_log.emit("Setting the agent pose to the ground truth: " + str(agent_pose))
 
 func xz(vector):
 	return Vector2(vector.x, vector.z)
 
 func xy(vector):
 	return Vector2(vector.x, vector.y)
+
+func world_pose_to_grid_pose(vec):
+	return Vector3(vec.y, -vec.x, -vec.z)
+	
+func grid_to_world(vec) -> Vector3:
+	return Vector3(-vec.y, vec.x, -vec.z)
 
 func _on_stepped_scans_toggled(toggled_on):
 	if toggled_on:

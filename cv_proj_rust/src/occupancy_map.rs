@@ -93,6 +93,9 @@ impl OcMap {
     pub fn set_agent_location(&mut self, pos: Vector2<f32>) {
         let map_coords = self.get_map_coords_pose(Vector3::new(pos.x, pos.y, 0.));
         let index = (map_coords.y as u32 * self.dim_x + map_coords.x as u32) as usize;
+        if index as u32 >= self.dim_x * self.dim_y {
+            return;
+        }
         self.tile_states[index] = TileState::AgentPos;
         self.updated_indices.push(index);
     }
@@ -154,8 +157,8 @@ impl OcMap {
 
             match self.tile_states[index] {
                 TileState::Occupied => break,
-                //TileState::Free => continue,
-                TileState::Unknown | TileState::Free => {
+                TileState::Free => continue,
+                TileState::Unknown => {
                     if i == len-1 {
                         self.tile_states[index] = TileState::Occupied;
                     } else {

@@ -63,19 +63,22 @@ func _on_match_scan_to_map_pressed():
 	var agent_rotation = agent.rotation.y
 	
 	#var pose_estimate = xz(agent.transform.origin).rotated(agent_rotation - PI/2)
+	var random_offset = Vector2(randf_range(0, 0.2), randf_range(0, 0.2))
 	var pose_estimate = agent_pose
 	
 	var snapshot_at_best_guess: Array[Vector2] = []
 	for p in snapshot:
-		snapshot_at_best_guess.append(p + xy(pose_estimate))
-	#lidar_preview.draw_icp(omv.get_pc_gd(), snapshot_at_best_guess)
+		snapshot_at_best_guess.append(xy(pose_estimate) + (p).rotated(0))
 	
 	var oc_map_pc: Array[Vector2] = omv.get_pc_gd()
 	
 	var corrected_points = icp.icp_point_to_plane(oc_map_pc, snapshot_at_best_guess, 7)
 	var transform = icp.icp_point_to_plane_transform(oc_map_pc, snapshot_at_best_guess, 7)
 	lidar_preview.draw_icp(oc_map_pc, corrected_points)
-	print(transform)
+	#lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
+	print(transform + pose_estimate)
+	print("pose_estimate from match scan to map: ", pose_estimate)
+	var new_pose_estimate = transform + pose_estimate
 
 func _iterate_icp():
 	if len(snapshots) < 2:
