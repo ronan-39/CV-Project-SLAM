@@ -48,17 +48,6 @@ func _physics_process(delta):
 			#omv.update_map(a_point, agent_pose)
 		
 		this_is_the_first_scan = false
-			
-		#omv.update_map(snapshots[-1], world_pose_to_grid_pose(agent_pose))
-		#var agent_pose_neg_rot = agent_pose
-		#agent_pose_neg_rot.z = -agent_pose_neg_rot.z
-		
-		# uncomment this probably
-		#var agent_pose_world = Vector3(agent.transform.origin.x, agent.transform.origin.z, agent.rotation.y)
-		#omv.update_map(snapshots[-1], agent_pose)
-		#var a_point: Array[Vector2] = [Vector2(1., 0)]
-		#omv.update_map(a_point, agent_pose)
-		#previous_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
 	
 	if !stepped_scans:
 		interval_tracker+=1
@@ -114,7 +103,6 @@ func update_agent_pose_from_map():
 	var snapshot = snapshots[-1]
 	var agent_rotation = agent.rotation.y
 	var pose_estimate = agent_pose
-	print("HERE: pose_estimate: ", pose_estimate)
 
 	var snapshot_at_best_guess: Array[Vector2] = []
 	for p in snapshot:
@@ -137,12 +125,9 @@ func update_agent_pose_from_map():
 	lidar_preview_2.draw_icp(oc_map_pc, corrected_points)
 	#lidar_preview.draw_points(snapshots[-1])
 	var new_pose_estimate_grid = transform + pose_estimate
-	#print("new estimated pose (in gird space): ", new_pose_estimate_grid)
-	#print("new estimated pose (in world space): ", grid_to_world(new_pose_estimate_grid))
-	#console_log.emit("Setting the agent pose to latest estimate: " + str(new_pose_estimate_grid))
+	
 	console_log.emit("Agent pose ground truth: " + str(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)))
 	agent_pose = new_pose_estimate_grid
-	#print("agent pose is ", agent_pose, ", but map update wants to make it ", new_pose_estimate_grid)
 	
 	# essentially, use a compass
 	agent_pose.z = -agent.rotation.y

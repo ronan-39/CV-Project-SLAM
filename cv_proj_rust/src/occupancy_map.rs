@@ -133,45 +133,18 @@ impl OcMap {
                 continue
             }
 
-            // if index == last_index_known {
-            //     break;
-            // }
-
-            // todo combine these into a match statement
-            // if let TileState::Occupied = self.tile_states[index] {
-            //     return;
-            //     // break;
-            // }
-
-            // // if let TileState::Free = self.tile_states[index] {
-            // //     continue;
-            // // } else {
-            // //     self.tile_states[index] = TileState::Free;
-            // //     self.updated_indices.push(index);
-            // // }
-
-            // if let TileState::Unknown = self.tile_states[index] {
-            //     self.tile_states[index] = TileState::Free;
-            //     self.updated_indices.push(index);
-            // }
-
             // try two things
             // probability of a free tile starts low and increase
             // probability of a free tile starts high and decreases when a tile is found there
 
-            let overwrite_free = true;
+            let overwrite_free = false;
 
             match self.tile_states[index] {
                 TileState::Occupied => break,
                 TileState::Free(p) => {
-                    if overwrite_free && i==len-1 { self.tile_states[index] = TileState::Occupied; } else { continue; }
-                //     // if i == len-1 { // if on the last tile of the line
-                //     //     // if p < 0.5 { self.tile_states[index] = TileState::Occupied; }
-                //     //     self.tile_states[index] = TileState::Occupied;
-                //     // } else {
-                //     //     self.tile_states[index] = TileState::Free((p+0.1).clamp(0.0, 1.0));
-                //     // }
-                //     continue;
+                    // if overwrite_free && i==len-1 { self.tile_states[index] = TileState::Occupied; } else { continue; }
+
+                    if i==len-1 { self.tile_states[index] = TileState::VisuallyOccupied; } else { continue; }
                 },
                 TileState::Unknown => {
                     if i == len-1 { // if on the last tile of the line
@@ -318,7 +291,8 @@ impl OcMap {
             TileState::Occupied => 1.0,
             TileState::Free(_) => 0.0,
             TileState::Possible(x) => x,
-            TileState::AgentPos => 0.0
+            TileState::AgentPos => 0.0,
+            TileState::VisuallyOccupied => 0.0,
         }
     }
 
@@ -353,6 +327,7 @@ pub enum TileState {
     Free(f32),
     Possible(f32),
     AgentPos,
+    VisuallyOccupied
 }
 
 // cargo test -- --nocapture to run and see prints

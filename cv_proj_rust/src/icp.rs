@@ -104,7 +104,7 @@ fn prepare_system_normals(pose: Vector3<f32>, target: &Vec<Vector2<f32>>, source
         let q_point = source[*j];
         let normal = source_normals[*j];
         let e: f32 = normal.dot(&error(pose, p_point, q_point));
-        let jcb = normal.transpose() * jacobian(pose, p_point); // dimensions dont match
+        let jcb = normal.transpose() * jacobian(pose, p_point);
         h += jcb.transpose() * jcb;
         g += jcb.transpose() * e;
         chi += e * e;
@@ -121,10 +121,10 @@ fn prepare_system(pose: Vector3<f32>, target: &Vec<Vector2<f32>>, source: &Vec<V
         let p_point = target[i];
         let q_point = source[*j];
         let e = error(pose, p_point, q_point);
-        let weight = 1.0;
+        let weight = if e.norm() < 2.0 { 1.0 } else { 0.0 };
         let jcb = jacobian(pose, p_point);
-        h += jcb.transpose() * jcb;
-        g += jcb.transpose() * e;
+        h += weight * jcb.transpose() * jcb;
+        g += weight * jcb.transpose() * e;
         chi += e * e.transpose();
     }
     (h, g, chi)
