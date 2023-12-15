@@ -121,14 +121,9 @@ impl INode2D for OccupancyMapVisualizer {
                 TileState::Free(_) => Color::from_rgba(0.95, 0.95, 0.95, 1.),
                 TileState::Possible(_) => Color::from_rgba(1.0, 0., 0., 1.),
                 TileState::AgentPos => Color::from_rgba(0., 1.0, 0., 1.),
-                TileState::VisuallyOccupied => Color::from_rgba(0., 0., 1., 1.)
+                TileState::VisuallyOccupied => Color::from_rgba(0., 0., 0.2, 1.)
             });
 
-            // if i%3 == 0 {
-            //     (*multimesh).set_instance_color(i, Color::from_rgba(1., 0., 0., 1.));
-            // } else {
-            //     (*multimesh).set_instance_color(i, Color::from_rgba(0., 1., 0., 1.));
-            // }
         }
 
         (*mmi).set_multimesh(multimesh);
@@ -155,7 +150,7 @@ impl INode2D for OccupancyMapVisualizer {
                     TileState::Free(_) => Color::from_rgba(0.95, 0.95, 0.95, 1.),
                     TileState::Possible(_) => Color::from_rgba(1.0, 0., 0., 1.),
                     TileState::AgentPos => Color::from_rgba(0., 1.0, 0., 1.),
-                    TileState::VisuallyOccupied => Color::from_rgba(0., 0., 1., 1.)
+                    TileState::VisuallyOccupied => Color::from_rgba(0., 0., 0.2, 1.)
                 });
             }
 
