@@ -72,7 +72,7 @@ impl OcMap {
         //yes. it doesnt apply the translation to vectors. do transform_point(&vec2.into()) to get the full transformation
         let pose_transform = Transform2::from_matrix_unchecked(pose_transform_pre);
 
-        // i know that the lidar scans are coming from the origin of the robot, so im cheating here (should multiply robot laser origin by pose transform)
+        // i know that the lidar scans are coming from the origin of the robot, so im simplifying here (should multiply robot laser origin by pose transform)
         let scan_origin_f = Vector2::new(map_pose[0], map_pose[1]);
 
         let scan_origin_i = Vector2::<u32>::new((map_pose[0] + 0.5) as u32, (map_pose[1] + 0.5) as u32);
@@ -159,12 +159,12 @@ impl OcMap {
             // probability of a free tile starts low and increase
             // probability of a free tile starts high and decreases when a tile is found there
 
-            let overwrite_free = false;
+            let overwrite_free = true;
 
             match self.tile_states[index] {
                 TileState::Occupied => break,
                 TileState::Free(p) => {
-                    if overwrite_free && i==len-1 { self.tile_states[index] = TileState::Occupied; }
+                    if overwrite_free && i==len-1 { self.tile_states[index] = TileState::Occupied; } else { continue; }
                 //     // if i == len-1 { // if on the last tile of the line
                 //     //     // if p < 0.5 { self.tile_states[index] = TileState::Occupied; }
                 //     //     self.tile_states[index] = TileState::Occupied;

@@ -40,13 +40,24 @@ func _physics_process(delta):
 			#update_agent_pose()
 			#update_agent_pose_cheating()
 			update_agent_pose_from_map()
+			omv.update_map(snapshots[-1], agent_pose)
+		else:
+			omv.update_map(snapshots[-1], Vector3(0., 0., 0.,))
+			#omv.update_map(snapshots[-1], true_agent_pose)
+			#var a_point: Array[Vector2] = [Vector2(3., 0), Vector2(0., 6.0)]
+			#omv.update_map(a_point, agent_pose)
 		
 		this_is_the_first_scan = false
 			
 		#omv.update_map(snapshots[-1], world_pose_to_grid_pose(agent_pose))
 		#var agent_pose_neg_rot = agent_pose
 		#agent_pose_neg_rot.z = -agent_pose_neg_rot.z
-		omv.update_map(snapshots[-1], agent_pose)
+		
+		# uncomment this probably
+		#var agent_pose_world = Vector3(agent.transform.origin.x, agent.transform.origin.z, agent.rotation.y)
+		#omv.update_map(snapshots[-1], agent_pose)
+		#var a_point: Array[Vector2] = [Vector2(1., 0)]
+		#omv.update_map(a_point, agent_pose)
 		#previous_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
 	
 	if !stepped_scans:
@@ -132,7 +143,10 @@ func update_agent_pose_from_map():
 	console_log.emit("Agent pose ground truth: " + str(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)))
 	agent_pose = new_pose_estimate_grid
 	#print("agent pose is ", agent_pose, ", but map update wants to make it ", new_pose_estimate_grid)
-	#agent_pose.z = -agent.rotation.y
+	
+	# essentially, use a compass
+	agent_pose.z = -agent.rotation.y
+	#omv.update_map(corrected_points, Vector3(0., 0., 0.))
 
 # for debug purposes, this function sets the pose to the ground truth value
 func update_agent_pose_cheating():
