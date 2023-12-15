@@ -3,7 +3,9 @@ use na::{SMatrix, SVector, Vector2, Matrix2, Vector3, Matrix3, Matrix2x3};
 // use std::f32::{sin, cos};
 use lstsq::lstsq;
 
-pub fn icp_point_to_point_least_squares(source: &Vec<Vector2<f32>>, target: &Vec<Vector2<f32>>, n: usize) -> (Vec<Vec<Vector2<f32>>>, Vec<f32>, Vec<Vec<usize>>) {
+pub fn icp_point_to_point_least_squares(source: &Vec<Vector2<f32>>, target: &Vec<Vector2<f32>>, n: usize) -> (Vec<Vec<Vector2<f32>>>, Vec<f32>, Vec<Vec<usize>>, Matrix3<f32>) {
+    let mut accumulated_transform = Matrix3::<f32>::identity();
+
     let mut pose = Vector3::<f32>::zeros();
     let mut chi_values = Vec::<f32>::new();
     let mut pose_values = vec![pose.clone()];
@@ -30,7 +32,11 @@ pub fn icp_point_to_point_least_squares(source: &Vec<Vector2<f32>>, target: &Vec
     }
     corresp_values.push(corresp_values.last().unwrap().clone());
 
-    (target_values, chi_values, corresp_values)
+    accumulated_transform[(0,0)] = pose[0];
+    accumulated_transform[(1,0)] = pose[1];
+    accumulated_transform[(2,0)] = pose[2];
+
+    (target_values, chi_values, corresp_values, accumulated_transform)
 }
 
 pub fn icp_point_to_plane(source: &Vec<Vector2<f32>>, target: &Vec<Vector2<f32>>, n: usize

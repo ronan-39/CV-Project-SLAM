@@ -40,6 +40,7 @@ func _take_snapshot():
 	
 	# todo why do i have to make the x negative and rotation negative?
 	var robot_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
+	
 	#var robot_pose = Vector3(agent.transform.origin.z, agent.transform.origin.x, agent.rotation.y)
 	omv.update_map(snapshot, robot_pose)
 	#lidar_preview.draw_points(omv.get_pc_gd())
@@ -65,19 +66,25 @@ func _on_match_scan_to_map_pressed():
 	#var pose_estimate = xz(agent.transform.origin).rotated(agent_rotation - PI/2)
 	var random_offset = Vector2(randf_range(0, 0.2), randf_range(0, 0.2))
 	var pose_estimate = agent_pose
+	print("pose estimate: ", pose_estimate)
+	# here, pose estimate is in grid space
 	
 	var snapshot_at_best_guess: Array[Vector2] = []
 	for p in snapshot:
-		snapshot_at_best_guess.append(xy(pose_estimate) + (p).rotated(0))
+		snapshot_at_best_guess.append(xy(pose_estimate) + (p).rotated(-agent_rotation))
+		#snapshot_at_best_guess.append(p.rotated(-agent_rotation) + Vector2(pose_estimate.x, pose_estimate.y))
 	
 	var oc_map_pc: Array[Vector2] = omv.get_pc_gd()
 	
-	var corrected_points = icp.icp_point_to_plane(oc_map_pc, snapshot_at_best_guess, 7)
+	#var corrected_points = icp.icp_point_to_point_least_squares(oc_map_pc, snapshot_at_best_guess, 10)
+	var corrected_points = icp.icp_point_to_plane(oc_map_pc, snapshot_at_best_guess, 10)
 	var transform = icp.icp_point_to_plane_transform(oc_map_pc, snapshot_at_best_guess, 7)
 	lidar_preview.draw_icp(oc_map_pc, corrected_points)
 	#lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
-	print(transform + pose_estimate)
-	print("pose_estimate from match scan to map: ", pose_estimate)
+	#lidar_preview.draw_icp(oc_map_pc, snapshots[-1])
+	print("transform: ", transform)
+	#print(transform + pose_estimate)
+	#print("pose_estimate from match scan to map: ", pose_estimate)
 	var new_pose_estimate = transform + pose_estimate
 
 func _iterate_icp():
@@ -147,5 +154,6 @@ func _on_set_agent_pos_pressed():
 	agent.rotation.y = new_pose.z
 	#_take_snapshot()
 
-
+func grid_to_world(vec) -> Vector3:
+	return Vector3(-vec.y, vec.x, -vec.z)
 

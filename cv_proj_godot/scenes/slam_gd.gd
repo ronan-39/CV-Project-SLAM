@@ -8,6 +8,7 @@ signal console_log(str)
 @onready var icp = $"../Icp"
 @onready var omv = $'../OccupancyMapVisualizer'
 @onready var lidar_preview = $'../lidar_preview/lidar_preview'
+@onready var lidar_preview_2 = $'../lidar_preview_2/lidar_preview'
 
 var stepped_scans: bool = true
 var scan_interval: int = 5 # frames between scans
@@ -37,12 +38,14 @@ func _physics_process(delta):
 		
 		if !this_is_the_first_scan:
 			#update_agent_pose()
-			update_agent_pose_cheating()
+			#update_agent_pose_cheating()
 			update_agent_pose_from_map()
 		
 		this_is_the_first_scan = false
 			
 		#omv.update_map(snapshots[-1], world_pose_to_grid_pose(agent_pose))
+		#var agent_pose_neg_rot = agent_pose
+		#agent_pose_neg_rot.z = -agent_pose_neg_rot.z
 		omv.update_map(snapshots[-1], agent_pose)
 		#previous_pose = Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)
 	
@@ -100,6 +103,7 @@ func update_agent_pose_from_map():
 	var snapshot = snapshots[-1]
 	var agent_rotation = agent.rotation.y
 	var pose_estimate = agent_pose
+	print("HERE: pose_estimate: ", pose_estimate)
 
 	var snapshot_at_best_guess: Array[Vector2] = []
 	for p in snapshot:
@@ -107,18 +111,28 @@ func update_agent_pose_from_map():
 
 	var oc_map_pc: Array[Vector2] = omv.get_pc_gd()
 	
-	lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
+	var use_point_to_plane: bool = false
+	var corrected_points: Array[Vector2] = []
+	var transform: Vector3 = Vector3.ZERO
 	
-	var corrected_points = icp.icp_point_to_plane(oc_map_pc, snapshot_at_best_guess, 7)
-	var transform = icp.icp_point_to_plane_transform(oc_map_pc, snapshot_at_best_guess, 7)
-	#lidar_preview.draw_icp(oc_map_pc, corrected_points)
-	#lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
+	if use_point_to_plane:
+		corrected_points = icp.icp_point_to_plane(oc_map_pc, snapshot_at_best_guess, 7)
+		transform = icp.icp_point_to_plane_transform(oc_map_pc, snapshot_at_best_guess, 7)
+	else:
+		corrected_points = icp.icp_point_to_point_least_squares(oc_map_pc, snapshot_at_best_guess, 20)
+		transform = icp.icp_point_to_point_transform(oc_map_pc, snapshot_at_best_guess, 20)
+		
+	lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
+	lidar_preview_2.draw_icp(oc_map_pc, corrected_points)
+	#lidar_preview.draw_points(snapshots[-1])
 	var new_pose_estimate_grid = transform + pose_estimate
-	print("new estimated pose (in gird space): ", new_pose_estimate_grid)
-	print("new estimated pose (in world space): ", grid_to_world(new_pose_estimate_grid))
-	console_log.emit("Setting the agent pose to latest estimate: " + str(new_pose_estimate_grid))
+	#print("new estimated pose (in gird space): ", new_pose_estimate_grid)
+	#print("new estimated pose (in world space): ", grid_to_world(new_pose_estimate_grid))
+	#console_log.emit("Setting the agent pose to latest estimate: " + str(new_pose_estimate_grid))
+	console_log.emit("Agent pose ground truth: " + str(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)))
 	agent_pose = new_pose_estimate_grid
-	agent_pose.z = -agent.rotation.y
+	#print("agent pose is ", agent_pose, ", but map update wants to make it ", new_pose_estimate_grid)
+	#agent_pose.z = -agent.rotation.y
 
 # for debug purposes, this function sets the pose to the ground truth value
 func update_agent_pose_cheating():

@@ -145,10 +145,27 @@ impl Icp {
                                      .map(|v| SVector::<f32, 2>::new(v.x, v.y))
                                      .collect::<Vec<SVector::<f32,2>>>();
 
-        let (target_values, chi_values, corresp_values) = icp::icp_point_to_point_least_squares(&source, &target, n as usize);
+        let (target_values, chi_values, corresp_values, accumulated_transform) = icp::icp_point_to_point_least_squares(&source, &target, n as usize);
         let result: Array<Vector2> = target_values.last().unwrap().iter().map(|v| Vector2::new(v[0], v[1])).collect();
 
         result
+    }
+
+    // uses icp point to point least squares, but only returns the transform
+    #[func]
+    fn icp_point_to_point_transform(source_godot: Array<Vector2>, target_godot: Array<Vector2>, n: u32) -> Vector3 {
+        let mut source = source_godot.iter_shared()
+                                     .map(|v| SVector::<f32, 2>::new(v.x, v.y))
+                                     .collect::<Vec<SVector::<f32,2>>>();
+
+        let mut target = target_godot.iter_shared()
+                                     .map(|v| SVector::<f32, 2>::new(v.x, v.y))
+                                     .collect::<Vec<SVector::<f32,2>>>();
+
+        let (target_values, chi_values, corresp_values, accumulated_transform) = icp::icp_point_to_point_least_squares(&source, &target, n as usize);
+        let result: Array<Vector2> = target_values.last().unwrap().iter().map(|v| Vector2::new(v[0], v[1])).collect();
+
+        Vector3::new(accumulated_transform[(0,0)], accumulated_transform[(1,0)], accumulated_transform[(2,0)])
     }
 
     #[func]
@@ -164,8 +181,11 @@ impl Icp {
         let (target_values, chi_values, corresp_values, accumulated_transform) = icp::icp_point_to_plane(&source, &target, n as usize);
         let result: Array<Vector2> = target_values.last().unwrap().iter().map(|v| Vector2::new(v[0], v[1])).collect();
 
+        godot_print!("{:?}", accumulated_transform);
+
         result
     }
+
 
     // in some cases I will want the points, in some cases I will want the transform. I'm not sure how to return both in one function
     // so I made two. This isn't ideal but what can you do.

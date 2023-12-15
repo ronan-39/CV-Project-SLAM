@@ -155,17 +155,32 @@ impl OcMap {
             //     self.updated_indices.push(index);
             // }
 
+            // try two things
+            // probability of a free tile starts low and increase
+            // probability of a free tile starts high and decreases when a tile is found there
+
+            let overwrite_free = false;
+
             match self.tile_states[index] {
                 TileState::Occupied => break,
-                TileState::Free => continue,
+                TileState::Free(p) => {
+                    if overwrite_free && i==len-1 { self.tile_states[index] = TileState::Occupied; }
+                //     // if i == len-1 { // if on the last tile of the line
+                //     //     // if p < 0.5 { self.tile_states[index] = TileState::Occupied; }
+                //     //     self.tile_states[index] = TileState::Occupied;
+                //     // } else {
+                //     //     self.tile_states[index] = TileState::Free((p+0.1).clamp(0.0, 1.0));
+                //     // }
+                //     continue;
+                },
                 TileState::Unknown => {
-                    if i == len-1 {
+                    if i == len-1 { // if on the last tile of the line
                         self.tile_states[index] = TileState::Occupied;
                     } else {
-                        self.tile_states[index] = TileState::Free;
+                        self.tile_states[index] = TileState::Free(0.1);
                     }
                     self.updated_indices.push(index);
-                }
+                },
                 _ => continue,
             };
         }
@@ -301,7 +316,7 @@ impl OcMap {
         match self.tile_states[index as usize] {
             TileState::Unknown => 0.5,
             TileState::Occupied => 1.0,
-            TileState::Free => 0.0,
+            TileState::Free(_) => 0.0,
             TileState::Possible(x) => x,
             TileState::AgentPos => 0.0
         }
@@ -335,7 +350,7 @@ fn r(theta: f32) -> Matrix2<f32> {
 pub enum TileState {
     Unknown,
     Occupied,
-    Free,
+    Free(f32),
     Possible(f32),
     AgentPos,
 }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://cvygwe34sxnb5"]
+[gd_scene load_steps=17 format=3 uid="uid://cvygwe34sxnb5"]
 
 [ext_resource type="PackedScene" uid="uid://cd3vabikmslif" path="res://scenes/test_env_1.tscn" id="1_xspcp"]
 [ext_resource type="PackedScene" uid="uid://deyfwmwydyk50" path="res://scenes/grid_map.tscn" id="2_5ramx"]
@@ -21,6 +21,9 @@ viewport_path = NodePath("map")
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_kkkfn"]
 viewport_path = NodePath("lidar_preview")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_llyqj"]
+viewport_path = NodePath("lidar_preview_2")
 
 [node name="Node2D" type="Node2D"]
 
@@ -679,6 +682,16 @@ z_index = 1
 position = Vector2(164, 492)
 texture = SubResource("ViewportTexture_kkkfn")
 
+[node name="lidar_preview_2" type="SubViewport" parent="."]
+size = Vector2i(320, 290)
+
+[node name="lidar_preview" parent="lidar_preview_2" instance=ExtResource("3_0fp2x")]
+
+[node name="lidar_preview_2_sprite" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(982, 154)
+texture = SubResource("ViewportTexture_llyqj")
+
 [node name="background" type="ColorRect" parent="."]
 offset_right = 1152.0
 offset_bottom = 648.0
@@ -784,6 +797,7 @@ script = ExtResource("11_5kuo6")
 [node name="SnapshotOMV" type="OccupancyMapVisualizer" parent="."]
 dim_x = 100
 dim_y = 100
+visible = false
 position = Vector2(838, 303)
 rotation = -1.5708
 
