@@ -28,7 +28,8 @@ func _take_snapshot():
 		# weird bug where it collides at the origin. ignore these points
 		if c.get_collision_point() == Vector3.ZERO:
 			continue
-		snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)).rotated(agent_rotation - PI/2))
+		var collision_wrt_agent = (xz(c.get_collision_point()) - xz(agent_global_transform)).rotated(agent_rotation - PI/2)
+		snapshot.append(collision_wrt_agent + collision_wrt_agent.normalized() * randfn(0, 0.0))
 		#var scan_endpoint = xz(c.get_collision_point()) - xz(agent_global_transform)
 		#snapshot.append(scan_endpoint)
 		log += str(snapshot[-1])
@@ -104,7 +105,7 @@ func _iterate_icp():
 	icp.foo()
 	#var transform = icp.icp_svd(snapshots[-2], snapshots[-1], 1)
 	#var transform = icp.icp_svd_iter(snapshots[-2], snapshots[-1], 1)
-	var corrected_points_two = icp.icp_point_to_plane(snapshots[-2], snapshots[-1], 7)
+	var corrected_points_two = icp.icp_point_to_plane(snapshots[-2], snapshots[-1], 1)
 	var transform = icp.icp_point_to_plane_transform(snapshots[-2], snapshots[-1], 7)
 	#print(transform)
 	var corrected_points: Array[Vector2] = []
@@ -132,6 +133,9 @@ func _compare_consecutive_snapshots():
 func _show_normals():
 	var normal_endpoints = icp.get_normals_to_draw(snapshots[-1], 1)
 	lidar_preview.draw_normals(snapshots[-1], normal_endpoints)
+	
+	#var normal_endpoints = icp.get_normals_to_draw(omv.get_pc_gd(), 1)
+	#lidar_preview.draw_normals(omv.get_pc_gd, normal_endpoints)
 	
 func _clear_map():
 	omv.clear_map()

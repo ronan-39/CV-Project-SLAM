@@ -10,6 +10,9 @@ signal console_log(str)
 @onready var lidar_preview = $'../lidar_preview/lidar_preview'
 @onready var lidar_preview_2 = $'../lidar_preview_2/lidar_preview'
 
+@onready var err_dist_label = $err_dist
+@onready var false_corr_label = $false_corr
+
 var stepped_scans: bool = true
 var scan_interval: int = 5 # frames between scans
 var interval_tracker: int = 0
@@ -18,15 +21,17 @@ var snapshots_max_size = 10
 var snapshots = []
 var this_is_the_first_scan = true
 
-var agent_pose = Vector3(0., 0., 0.,)
-var previous_pose = Vector3(0., 0., 0.,)
-var true_agent_pose = Vector3(0., 0., 0.,)
+var agent_pose := Vector3(0., 0., 0.,)
+var previous_pose := Vector3(0., 0., 0.,)
+var true_agent_pose := Vector3(0., 0., 0.,)
+var true_previous_agent_pose := Vector3(0., 0., 0.)
 
 func _ready():
 	pass
 
 func _physics_process(delta):
-	true_agent_pose = Vector3(agent.transform.origin.x, agent.transform.origin.z, -agent.rotation.y)
+	true_previous_agent_pose = true_agent_pose
+	true_agent_pose = world_pose_to_grid_pose(Vector3(agent.transform.origin.x, agent.transform.origin.z, -agent.rotation.y))
 	
 	if interval_tracker == scan_interval:
 		interval_tracker = 0
@@ -54,6 +59,7 @@ func _physics_process(delta):
 		
 	#omv.show_agent_location(world_to_grid(xy(true_agent_pose)))
 	omv.show_agent_location(xy(agent_pose))
+	calculate_metrics()
 
 func step():
 	# make a scan be taken next time physics_process() runs
@@ -67,7 +73,8 @@ func scan():
 	for c in agent.lidar.get_children():
 		if c.get_collision_point() == Vector3.ZERO:
 			continue # avoid bug where it collides with nothing at the origin
-		snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)).rotated(agent_rotation - PI/2))
+		var collision_wrt_agent = (xz(c.get_collision_point()) - xz(agent_global_transform)).rotated(agent_rotation - PI/2)
+		snapshot.append(collision_wrt_agent + collision_wrt_agent.normalized() * randfn(0, 0.1))
 		#snapshot.append((xz(c.get_collision_point()) - xz(agent_global_transform)))
 		log += str(snapshot[-1])
 		log += " "
@@ -120,13 +127,18 @@ func update_agent_pose_from_map():
 	else:
 		corrected_points = icp.icp_point_to_point_least_squares(oc_map_pc, snapshot_at_best_guess, 20)
 		transform = icp.icp_point_to_point_transform(oc_map_pc, snapshot_at_best_guess, 20)
-		
+	
+	var true_transform = xy(true_agent_pose - true_previous_agent_pose)
+	if true_transform.length() < transform.length()*2:
+		#print("false correlation")
+		pass
+	
 	lidar_preview.draw_icp(oc_map_pc, snapshot_at_best_guess)
 	lidar_preview_2.draw_icp(oc_map_pc, corrected_points)
 	#lidar_preview.draw_points(snapshots[-1])
 	var new_pose_estimate_grid = transform + pose_estimate
 	
-	console_log.emit("Agent pose ground truth: " + str(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)))
+	#console_log.emit("Agent pose ground truth: " + str(Vector3(agent.transform.origin.z, -agent.transform.origin.x, -agent.rotation.y)))
 	agent_pose = new_pose_estimate_grid
 	
 	# essentially, use a compass
@@ -150,6 +162,15 @@ func world_pose_to_grid_pose(vec):
 	
 func grid_to_world(vec) -> Vector3:
 	return Vector3(-vec.y, vec.x, -vec.z)
+
+#var dist_error := ""
+var dist_err_file := FileAccess.open("distance_metric.txt", FileAccess.WRITE)
+@export var store_values := false
+func calculate_metrics():
+	var err := str((xy(true_agent_pose) - xy(agent_pose)).length()) + "\n"
+	err_dist_label.text = err
+	if store_values:
+		dist_err_file.store_string(err)
 
 func _on_stepped_scans_toggled(toggled_on):
 	if toggled_on:

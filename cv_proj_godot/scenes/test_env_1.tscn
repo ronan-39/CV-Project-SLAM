@@ -131,9 +131,10 @@ data = PackedVector3Array(-0.15, 0.5, 10, 0.15, 0.5, 10, -0.15, -0.5, 10, 0.15, 
 data = PackedVector3Array(-0.15, 0.5, 10, 0.15, 0.5, 10, -0.15, -0.5, 10, 0.15, 0.5, 10, 0.15, -0.5, 10, -0.15, -0.5, 10, 0.15, 0.5, -10, -0.15, 0.5, -10, 0.15, -0.5, -10, -0.15, 0.5, -10, -0.15, -0.5, -10, 0.15, -0.5, -10, 0.15, 0.5, 10, 0.15, 0.5, -10, 0.15, -0.5, 10, 0.15, 0.5, -10, 0.15, -0.5, -10, 0.15, -0.5, 10, -0.15, 0.5, -10, -0.15, 0.5, 10, -0.15, -0.5, -10, -0.15, 0.5, 10, -0.15, -0.5, 10, -0.15, -0.5, -10, 0.15, 0.5, 10, -0.15, 0.5, 10, 0.15, 0.5, -10, -0.15, 0.5, 10, -0.15, 0.5, -10, 0.15, 0.5, -10, -0.15, -0.5, 10, 0.15, -0.5, 10, -0.15, -0.5, -10, 0.15, -0.5, 10, 0.15, -0.5, -10, -0.15, -0.5, -10)
 
 [sub_resource type="BoxMesh" id="BoxMesh_iwvqn"]
+size = Vector3(1, 1, 3.385)
 
-[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_poh15"]
-data = PackedVector3Array(-0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5)
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_yo7po"]
+data = PackedVector3Array(-0.5, 0.5, 1.6925, 0.5, 0.5, 1.6925, -0.5, -0.5, 1.6925, 0.5, 0.5, 1.6925, 0.5, -0.5, 1.6925, -0.5, -0.5, 1.6925, 0.5, 0.5, -1.6925, -0.5, 0.5, -1.6925, 0.5, -0.5, -1.6925, -0.5, 0.5, -1.6925, -0.5, -0.5, -1.6925, 0.5, -0.5, -1.6925, 0.5, 0.5, 1.6925, 0.5, 0.5, -1.6925, 0.5, -0.5, 1.6925, 0.5, 0.5, -1.6925, 0.5, -0.5, -1.6925, 0.5, -0.5, 1.6925, -0.5, 0.5, -1.6925, -0.5, 0.5, 1.6925, -0.5, -0.5, -1.6925, -0.5, 0.5, 1.6925, -0.5, -0.5, 1.6925, -0.5, -0.5, -1.6925, 0.5, 0.5, 1.6925, -0.5, 0.5, 1.6925, 0.5, 0.5, -1.6925, -0.5, 0.5, 1.6925, -0.5, 0.5, -1.6925, 0.5, 0.5, -1.6925, -0.5, -0.5, 1.6925, 0.5, -0.5, 1.6925, -0.5, -0.5, -1.6925, 0.5, -0.5, 1.6925, 0.5, -0.5, -1.6925, -0.5, -0.5, -1.6925)
 
 [node name="Node3D" type="Node3D" node_paths=PackedStringArray("agent")]
 script = ExtResource("1_ms41h")
@@ -157,6 +158,8 @@ mesh = SubResource("BoxMesh_j81i6")
 shape = SubResource("ConcavePolygonShape3D_xy5p8")
 
 [node name="walls1" type="Node3D" parent="."]
+process_mode = 4
+visible = false
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="walls1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5038, 0.5, -0.641631)
@@ -259,8 +262,6 @@ skeleton = NodePath("../..")
 shape = SubResource("ConcavePolygonShape3D_f0exj")
 
 [node name="walls2" type="Node3D" parent="."]
-process_mode = 4
-visible = false
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="walls2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.104903, 0.5, -4.18028)
@@ -398,7 +399,6 @@ skeleton = NodePath("../..")
 shape = SubResource("ConcavePolygonShape3D_3yeno")
 
 [node name="TurtleBot" parent="." instance=ExtResource("1_04d11")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.543849)
 
 [node name="ortho_cam" type="Camera3D" parent="."]
 transform = Transform3D(-4.37114e-08, 1, 4.37114e-08, 0, -4.37114e-08, 1, 1, 4.37114e-08, 1.91069e-15, 0, 13.0602, 0)
@@ -410,13 +410,14 @@ size = 20.0
 transform = Transform3D(0.490904, 0.422373, -0.761981, 0, 0.87462, 0.48481, 0.871214, -0.237995, 0.429354, -6.342, 4.41, 4.624)
 
 [node name="floating_wall" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.49368, 2.32925, -0.0164001)
+process_mode = 4
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.588, 0.5, -0.0164001)
 visible = false
 mesh = SubResource("BoxMesh_iwvqn")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="floating_wall"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="floating_wall/StaticBody3D"]
-shape = SubResource("ConcavePolygonShape3D_poh15")
+shape = SubResource("ConcavePolygonShape3D_yo7po")
 
 [editable path="TurtleBot"]
